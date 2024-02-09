@@ -1,7 +1,7 @@
 version: '2'
 services:
-  balena-cam:
-    build: ./balena-cam
+  balena-cam-mqtt:
+    build: ./balena-cam-mqtt
     privileged: true
     restart: always
     network_mode: "host"
