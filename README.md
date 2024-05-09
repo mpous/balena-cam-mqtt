@@ -1,6 +1,8 @@
 ![](https://github.com/balena-labs-projects/balena-cam/blob/master/balena-cam/app/client/balena-cam-readme.png?raw=true)
 
-Live stream your balena device's camera feed.
+# balenaCam using MQTT
+
+Stream your balena device's camera feed publishing to a MQTT broker.
 
 ## Getting started
 
@@ -61,17 +63,16 @@ If you have access to a TURN server and you want your balenaCam devices to use i
 | **`TURN_USERNAME`** | **`<yourTURNserverUsername>`**                     |
 | **`TURN_PASSWORD`** | **`yourTURNserverPassword`**                       |
 
-## Additional Information
+## Configure the MQTT broker
 
-- This project uses [WebRTC](https://webrtc.org/) (a Real-Time Communication protocol).
-- A direct WebRTC connection fails in some cases.
-- This current version uses mjpeg streaming when the webRTC connection fails.
-- Chrome browsers will hide the local IP address from WebRTC, making the page appear but no camera view. To resolve this try the following
-  - Navigate to chrome://flags/#enable-webrtc-hide-local-ips-with-mdns and set it to Disabled
-  - You will need to relaunch Chrome after altering the setting
-- Firefox may also hide local IP address from WebRTC, confirm following in 'config:about'
-  - media.peerconnection.enabled: true
-  - media.peerconnection.ice.obfuscate_host_addresses: false
+To configure where to publish the images via MQTT you will need to define some variables.
+
+
+| Key            | Value                      |
+| -------------- | -------------------------- |
+| **`mqtt-broker`** | **`your broker IP address goes here`** |
+| **`mqtt-port`** | **`your broker port goes here`** |
+| **`mqtt-topic`** | **`the topic where you are going to publish goes here`** |
 
 ## Supported Browsers
 
