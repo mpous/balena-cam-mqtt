@@ -296,8 +296,7 @@ if __name__ == '__main__':
         else:
             print("Failed to capture the image.")
         
-        sleep(1)
-
+        sleep(2)
 
     ##
 
