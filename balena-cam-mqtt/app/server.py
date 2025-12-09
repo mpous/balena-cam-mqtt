@@ -187,6 +187,49 @@ def checkDeviceReadiness():
     else:
         print('Video device is ready')
 
+def draw_bounding_boxes(frame, data):
+
+    boxes = data['result']['bounding_boxes']
+
+    for obj in boxes:
+        label = obj['label']
+        confidence = obj['value'] 
+
+        x = int(obj['x'])
+        y = int(obj['y'])
+        w = int(obj['width'])
+        h = int(obj['height'])
+
+        top_left = (x, y)
+        bottom_right = (x + w, y + h)
+
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+        label_with_conf = '{}: {:.2f}'.format(label, confidence)
+        cv2.putText(frame, label_with_conf, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (36, 255, 12), 2)
+    return frame
+
+
+def publish_detected_objects(data):
+    try:
+        boxes = data['result']['bounding_boxes']
+        if not boxes:  # Check if no objects are detected
+            print("No objects detected. Skipping MQTT publish.")
+            return
+        message = {"detected_objects": []}
+        for obj in boxes:
+            message["detected_objects"].append({
+                "label": obj['label'],
+                "confidence": obj['value'],
+                "x": obj['x'],
+                "y": obj['y'],
+                "width": obj['width'],
+                "height": obj['height']
+            })
+        mqtt_client.publish(mqtt_topic, str(message))
+        print(f"Published to MQTT: {message}")
+    except Exception as e:
+        print(f"Failed to publish MQTT message: {e}")
 
 def capture_image():
     # Start the webcam capture
@@ -264,11 +307,10 @@ if __name__ == '__main__':
 
     # MQTT broker definition
     print("Setting up the MQTT broker")
-    broker = os.environ['mqtt_broker']
-    port = os.environ['mqtt_port']
-    topic = os.environ['mqtt_topic']
-    if topic == "":
-        topic='balena/site/area/line/cell/camera/raw'
+    model_container = os.getenv('EI_IMG', 'edge-impulse')
+    mqtt_broker = os.getenv('MQTT_BROKER', 'mqtt')
+    mqtt_port = int(os.getenv('MQTT_PORT', '1883'))
+    mqtt_topic = os.getenv('MQTT_TOPIC', 'balena/site/area/line/cell/camera/raw')
 
     #print("checkDeviceReadiness")
     #checkDeviceReadiness()
@@ -278,6 +320,13 @@ if __name__ == '__main__':
     #print("CameraDevice")
     #camera_device = CameraDevice()
 
+    # Initialize MQTT client
+    mqtt_client = mqtt.Client()
+    try:
+        mqtt_client.connect(mqtt_broker, mqtt_port, 60)
+    except Exception as e:
+        print(f"Failed to connect to MQTT broker: {e}")
+    
     flip = False
     try:
         if os.environ['rotation'] == '1':
@@ -291,8 +340,24 @@ if __name__ == '__main__':
         print("Trying to Capture the image...")
         image = capture_image()
         if image is not None:
-            # Send the image to the MQTT broker
-            send_mqtt_message(broker, port, topic, image)
+            # Send the image to the Docker container API for inferencing
+            img = {'file': ('image.jpg', image)}
+            try:
+                r = requests.post('http://' + model_container + ':1337/api/image', files=img)
+            except Exception as e:
+                print("EI container not ready yet...")
+            else:
+            print("Response {}: {}".format(i, r.text))
+             # If response is valid, draw bounding boxes
+            if r.status_code == 200:
+                data = r.json()  # Assuming JSON response contains bounding box data
+                frame_with_boxes = draw_bounding_boxes(frame, data)
+                # Publish detected objects to MQTT
+                publish_detected_objects(data)
+                # Save or display the image
+                cv2.imwrite("/app/storage/image-box.png", frame_with_boxes)
+            else:
+                print("Failed to get valid response from inference API.")
         else:
             print("Failed to capture the image.")
         
