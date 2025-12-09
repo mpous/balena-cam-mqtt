@@ -64,4 +64,4 @@ WORKDIR /usr/src/app
 
 COPY ./app/ /usr/src/app/
 
-CMD ["python3", "/usr/src/app/server.py"]
+CMD ["python3", "/usr/src/app/capture.py"]
