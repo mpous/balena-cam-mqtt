@@ -14,11 +14,11 @@ services:
     labels:
       io.balena.features.kernel-modules: '1'
   
-  edge-impulse:
-    build: ./ei
-    privileged: true
-    ports:
-      - "1337:1337"
+  #edge-impulse:
+  #  build: ./ei
+  #  privileged: true
+  #  ports:
+  #    - "1337:1337"
 
   mqtt:
     image: eclipse-mosquitto:1.6.15
