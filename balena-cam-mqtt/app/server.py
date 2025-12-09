@@ -346,8 +346,7 @@ if __name__ == '__main__':
                 r = requests.post('http://' + model_container + ':1337/api/image', files=img)
             except Exception as e:
                 print("EI container not ready yet...")
-            else:
-            print("Response {}: {}".format(i, r.text))
+
              # If response is valid, draw bounding boxes
             if r.status_code == 200:
                 data = r.json()  # Assuming JSON response contains bounding box data
